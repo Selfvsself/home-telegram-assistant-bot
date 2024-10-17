@@ -1,0 +1,20 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: telegram-assistant-bot
+
+server:
+  port: ${PORT_NUMBER}
+
+kafka:
+  bootstrap-url: ${KAFKA_BOOTSTRAP_URL}
+  group: ${KAFKA_GROUP_ID}
+  topic:
+    request: ${KAFKA_REQUEST_TOPIC_NAME}
+    response: ${KAFKA_RESPONSE_TOPIC_NAME}
+
+bot:
+  name: ${BOT_NAME}
+  token: ${BOT_TOKEN}
+  max-message-length: ${BOT_MAX_MESSAGE_LENGTH:4000}
