@@ -7,9 +7,10 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.selfvsself.model.ChatRequest;
 import ru.selfvsself.model.ChatResponse;
+
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -40,12 +41,14 @@ public class TelegramService extends TelegramLongPollingBot {
         if (update.hasMessage()) {
             long chatId = update.getMessage().getChatId();
             String userName = update.getMessage().getFrom().getUserName();
+            log.info("Receive message chatId: {}, userName: {}, text: {}", chatId, userName, update.getMessage().getText());
             if (update.getMessage().hasText()) {
                 String messageText = update.getMessage().getText();
                 if (messageText.equals("/start")) {
                     messageText = "Привет";
                 }
                 ChatRequest chatRequest = ChatRequest.builder()
+                        .requestId(UUID.randomUUID())
                         .chatId(chatId)
                         .userName(userName)
                         .content(messageText)
@@ -75,7 +78,7 @@ public class TelegramService extends TelegramLongPollingBot {
             message.setText(text);
             log.info("to '{}' chat '{}' send message '{}'", userName, chatId, text);
             execute(message);
-        } catch (TelegramApiException e) {
+        } catch (Exception e) {
             log.error("Could not send a message to chat id {}, message body: {}",
                     chatId,
                     text);
