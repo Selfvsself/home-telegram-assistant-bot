@@ -63,7 +63,7 @@ public class TelegramService extends TelegramLongPollingBot {
     public void processResponse(ChatResponse chatResponse) {
         long chatId = chatResponse.getChatId();
         String userName = chatResponse.getUserName();
-        String text = String.format("Model: %s\n\n%s",
+        String text = String.format("%s\n\n%s",
                 chatResponse.getModel(),
                 chatResponse.getContent());
         for (int i = 0; i < text.length(); i += maxMessageLength) {
