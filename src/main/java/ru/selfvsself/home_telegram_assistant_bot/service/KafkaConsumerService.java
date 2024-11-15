@@ -25,7 +25,9 @@ public class KafkaConsumerService {
             return;
         }
         if (!ResponseType.SUCCESS.equals(response.getType())) {
-            log.info("Model is null, requestId is {}", response.getRequestId());
+            log.info("ResponseType is not SUCCESS, current response type is {}, requestId is {}",
+                    response.getType(),
+                    response.getRequestId());
             response.setModel("Something went wrong");
             response.setContent("Unfortunately, it’s not possible to receive a response at the moment. Please try again later.");
         }
