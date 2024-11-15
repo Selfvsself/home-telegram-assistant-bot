@@ -3,7 +3,6 @@ package ru.selfvsself.home_telegram_assistant_bot.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import ru.selfvsself.model.ChatResponse;
 import ru.selfvsself.model.ResponseType;
 

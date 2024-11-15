@@ -12,6 +12,7 @@ import ru.selfvsself.home_telegram_assistant_bot.service.database.UserService;
 import ru.selfvsself.model.ChatRequest;
 import ru.selfvsself.model.ChatResponse;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -45,9 +46,11 @@ public class TelegramService extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         if (update.hasMessage()) {
             long chatId = update.getMessage().getChatId();
-            User user = userService.addUserIfNotExists(chatId, update.getMessage().getFrom().getFirstName());
-            String userName = update.getMessage().getFrom().getUserName();
-            log.info("Receive message chatId: {}, userName: {}, text: {}", chatId, userName, update.getMessage().getText());
+            String userName = Optional.ofNullable(update.getMessage().getFrom())
+                    .map(from -> from.getUserName()).orElse("unknown");
+            User user = userService.addUserIfNotExists(chatId, userName);
+            log.info("Receive message chatId: {}, userName: {}, text: {}",
+                    chatId, userName, update.getMessage().getText());
             if (update.getMessage().hasText()) {
                 String messageText = update.getMessage().getText();
                 if (messageText.equals("/start")) {
