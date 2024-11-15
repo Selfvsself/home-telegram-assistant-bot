@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import ru.selfvsself.home_telegram_assistant_bot.model.database.User;
+import ru.selfvsself.home_telegram_assistant_bot.service.database.UserService;
 import ru.selfvsself.model.ChatRequest;
 import ru.selfvsself.model.ChatResponse;
 
@@ -26,6 +28,9 @@ public class TelegramService extends TelegramLongPollingBot {
     @Autowired
     private KafkaProducerService kafkaProducerService;
 
+    @Autowired
+    private UserService userService;
+
     @Override
     public String getBotUsername() {
         return botName;
@@ -40,6 +45,7 @@ public class TelegramService extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         if (update.hasMessage()) {
             long chatId = update.getMessage().getChatId();
+            User user = userService.addUserIfNotExists(chatId, update.getMessage().getFrom().getFirstName());
             String userName = update.getMessage().getFrom().getUserName();
             log.info("Receive message chatId: {}, userName: {}, text: {}", chatId, userName, update.getMessage().getText());
             if (update.getMessage().hasText()) {
@@ -49,8 +55,7 @@ public class TelegramService extends TelegramLongPollingBot {
                 }
                 ChatRequest chatRequest = ChatRequest.builder()
                         .requestId(UUID.randomUUID())
-                        .chatId(chatId)
-                        .userName(userName)
+                        .userId(user.getId())
                         .content(messageText)
                         .useMessageHistory(true)
                         .useLocalModel(false)
@@ -61,8 +66,10 @@ public class TelegramService extends TelegramLongPollingBot {
     }
 
     public void processResponse(ChatResponse chatResponse) {
-        long chatId = chatResponse.getChatId();
-        String userName = chatResponse.getUserName();
+        User user = userService.findById(chatResponse.getUserId())
+                .orElseThrow();
+        long chatId = user.getChatId();
+        String userName = user.getName();
         String text = String.format("%s\n\n%s",
                 chatResponse.getModel(),
                 chatResponse.getContent());

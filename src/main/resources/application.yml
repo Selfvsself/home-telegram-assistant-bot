@@ -3,6 +3,18 @@ spring:
     allow-bean-definition-overriding: true
   application:
     name: telegram-assistant-bot
+  datasource:
+    userdb:
+      jdbc-url: ${USER_DB_URL}
+      url: ${USER_DB_URL}
+      driverClassName: org.postgresql.Driver
+      username: ${USER_DB_USERNAME}
+      password: ${USER_DB_PASSWORD}
+      table-scheme: ${USER_DB_TABLE_SCHEME}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
 
 logging:
   level:
