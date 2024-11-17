@@ -1,5 +1,6 @@
 package ru.selfvsself.home_telegram_assistant_bot.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -12,6 +13,7 @@ import ru.selfvsself.model.Participant;
 
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class KafkaProducerService {
 
@@ -28,9 +30,11 @@ public class KafkaProducerService {
 
     public void sendTextMessage(long chatId, String userName, String text) {
         if (!StringUtils.hasLength(userName)) {
+            log.error("User name is empty, chatId is {}", chatId);
             throw new IllegalArgumentException("User name is empty, chatId is " + chatId);
         }
         if (!StringUtils.hasLength(text)) {
+            log.error("Text is empty, chatId is {}", chatId);
             throw new IllegalArgumentException("Text is empty, chatId is " + chatId);
         }
         User user = userService.addUserIfNotExists(chatId, userName);

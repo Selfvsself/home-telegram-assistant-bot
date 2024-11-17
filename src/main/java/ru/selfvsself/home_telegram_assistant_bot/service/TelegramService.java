@@ -52,8 +52,16 @@ public class TelegramService extends TelegramLongPollingBot {
                 if (messageText.equals("/start")) {
                     messageText = "Привет";
                 }
-                kafkaProducerService.sendTextMessage(chatId, userName, messageText);
+                messageRequestProcessing(chatId, userName, messageText);
             }
+        }
+    }
+
+    public void messageRequestProcessing(long chatId, String userName, String text) {
+        try {
+            kafkaProducerService.sendTextMessage(chatId, userName, text);
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
     }
 

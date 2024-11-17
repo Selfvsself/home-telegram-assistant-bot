@@ -28,9 +28,11 @@ public class KafkaConsumerService {
     public void responseProcessing(ChatResponse response) {
         log.info("Response: {}", response);
         if (response.getRequestId() == null) {
+            log.error("Request id is null, response is {}", response);
             throw new IllegalArgumentException("Request id is null, response is " + response);
         }
         if (response.getParticipant() == null) {
+            log.error("Participant is null, response is {}", response);
             throw new IllegalArgumentException("Participant is null, response is " + response);
         }
         Long chatId = response.getParticipant().getChatId();
