@@ -11,10 +11,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatRequest {
-    private String content;
-    private UUID requestId;
-    private Participant participant;
-    private boolean useMessageHistory = true;
-    private boolean useLocalModel = true;
+public class Participant {
+    private UUID userId;
+    private Long chatId;
 }

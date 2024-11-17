@@ -15,6 +15,6 @@ public class ChatResponse {
     private String model;
     private String content;
     private UUID requestId;
-    private UUID userId;
+    private Participant participant;
     private ResponseType type;
 }
