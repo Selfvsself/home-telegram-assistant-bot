@@ -25,7 +25,17 @@ public class UserService {
         return userRepository.save(newUser);
     }
 
-    public Optional<User> findById(UUID userId) {
-        return userRepository.findById(userId);
+    public User findById(UUID userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User id is null");
+        }
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User with id " + userId + " not found"));
+    }
+
+    public long findChatIdByUserId(UUID userId) {
+        User user = findById(userId);
+        return Optional.of(user.getChatId())
+                .orElseThrow(() -> new IllegalArgumentException("User with id " + userId + " has no chatId"));
     }
 }

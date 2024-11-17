@@ -29,9 +29,6 @@ public class TelegramService extends TelegramLongPollingBot {
     @Autowired
     private KafkaProducerService kafkaProducerService;
 
-    @Autowired
-    private UserService userService;
-
     @Override
     public String getBotUsername() {
         return botName;
@@ -48,7 +45,6 @@ public class TelegramService extends TelegramLongPollingBot {
             long chatId = update.getMessage().getChatId();
             String userName = Optional.ofNullable(update.getMessage().getFrom())
                     .map(from -> from.getUserName()).orElse("unknown");
-            User user = userService.addUserIfNotExists(chatId, userName);
             log.info("Receive message chatId: {}, userName: {}, text: {}",
                     chatId, userName, update.getMessage().getText());
             if (update.getMessage().hasText()) {
@@ -56,37 +52,24 @@ public class TelegramService extends TelegramLongPollingBot {
                 if (messageText.equals("/start")) {
                     messageText = "Привет";
                 }
-                ChatRequest chatRequest = ChatRequest.builder()
-                        .requestId(UUID.randomUUID())
-                        .userId(user.getId())
-                        .content(messageText)
-                        .useMessageHistory(true)
-                        .useLocalModel(false)
-                        .build();
-                kafkaProducerService.sendMessage(chatRequest);
+                kafkaProducerService.sendTextMessage(chatId, userName, messageText);
             }
         }
     }
 
-    public void processResponse(ChatResponse chatResponse) {
-        User user = userService.findById(chatResponse.getUserId())
-                .orElseThrow();
-        long chatId = user.getChatId();
-        String userName = user.getName();
-        String text = String.format("%s\n\n%s",
-                chatResponse.getModel(),
-                chatResponse.getContent());
+    public void processResponse(long chatId, String model, String content) {
+        String text = String.format("%s\n\n%s", model, content);
         for (int i = 0; i < text.length(); i += maxMessageLength) {
-            sendMessage(chatId, userName, text.substring(i, Math.min(text.length(), i + maxMessageLength)));
+            sendMessage(chatId, text.substring(i, Math.min(text.length(), i + maxMessageLength)));
         }
     }
 
-    private void sendMessage(long chatId, String userName, String text) {
+    private void sendMessage(long chatId, String text) {
         try {
             SendMessage message = new SendMessage();
             message.setChatId(chatId);
             message.setText(text);
-            log.info("to '{}' chat '{}' send message '{}'", userName, chatId, text);
+            log.info("to chat '{}' send message '{}'", chatId, text);
             execute(message);
         } catch (Exception e) {
             log.error("Could not send a message to chat id {}, message body: {}",
