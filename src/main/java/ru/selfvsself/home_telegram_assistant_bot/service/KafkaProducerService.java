@@ -1,7 +1,6 @@
 package ru.selfvsself.home_telegram_assistant_bot.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -9,6 +8,7 @@ import org.springframework.util.StringUtils;
 import ru.selfvsself.home_telegram_assistant_bot.model.database.User;
 import ru.selfvsself.home_telegram_assistant_bot.service.database.UserService;
 import ru.selfvsself.model.ChatRequest;
+import ru.selfvsself.model.Content;
 import ru.selfvsself.model.Participant;
 
 import java.util.UUID;
@@ -41,7 +41,7 @@ public class KafkaProducerService {
         ChatRequest chatRequest = ChatRequest.builder()
                 .requestId(UUID.randomUUID())
                 .participant(new Participant(user.getId(), chatId))
-                .content(text)
+                .content(Content.builder().text(text).build())
                 .useMessageHistory(true)
                 .useLocalModel(false)
                 .build();

@@ -4,13 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import ru.selfvsself.home_telegram_assistant_bot.model.database.User;
 import ru.selfvsself.home_telegram_assistant_bot.service.database.UserService;
 import ru.selfvsself.model.ChatResponse;
 import ru.selfvsself.model.ResponseType;
-
-import java.util.Optional;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -18,6 +14,9 @@ public class KafkaConsumerService {
 
     private final TelegramService telegramService;
     private final UserService userService;
+
+    private final static String ERROR_MODEL = "Что-то пошло не так";
+    private final static String ERROR_MESSAGE = "К сожалению, на данный момент получить ответ невозможно. Пожалуйста, повторите попытку позже.";
 
     public KafkaConsumerService(TelegramService telegramService, UserService userService) {
         this.telegramService = telegramService;
@@ -41,18 +40,18 @@ public class KafkaConsumerService {
         }
         if (!StringUtils.hasLength(response.getModel())) {
             log.error("Model is empty, response is {}", response);
-            response.setModel("Something went wrong");
+            response.setModel(ERROR_MODEL);
         }
         if (!StringUtils.hasLength(response.getContent())) {
             log.error("Content is empty, response is {}", response);
-            response.setContent("Unfortunately, it’s not possible to receive a response at the moment. Please try again later.");
+            response.setContent(ERROR_MESSAGE);
         }
         if (!ResponseType.SUCCESS.equals(response.getType())) {
             log.info("ResponseType is not SUCCESS, current response type is {}, requestId is {}",
                     response.getType(),
                     response.getRequestId());
-            response.setModel("Something went wrong");
-            response.setContent("Unfortunately, it’s not possible to receive a response at the moment. Please try again later.");
+            response.setModel(ERROR_MODEL);
+            response.setContent(ERROR_MESSAGE);
         }
         String model = response.getModel();
         String content = response.getContent();

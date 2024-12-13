@@ -3,6 +3,8 @@ spring:
     allow-bean-definition-overriding: true
   application:
     name: telegram-assistant-bot
+  codec:
+    max-in-memory-size-mb: 250
   datasource:
     userdb:
       jdbc-url: ${USER_DB_URL}
@@ -38,3 +40,12 @@ bot:
   name: ${BOT_NAME}
   token: ${BOT_TOKEN}
   max-message-length: ${BOT_MAX_MESSAGE_LENGTH:4000}
+
+telegram-api:
+  base-url: ${TELEGRAM_API_BASE_URL}
+
+file-repository:
+  base-url: ${S3_BASE_URL}
+  access-key: ${S3_ACCESS_KEY}
+  secret-key: ${S3_SECRET_KEY}
+  bucket-name: ${S3_BUCKET_NAME}
