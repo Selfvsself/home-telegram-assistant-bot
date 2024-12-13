@@ -6,14 +6,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Update;
-import ru.selfvsself.home_telegram_assistant_bot.model.database.User;
-import ru.selfvsself.home_telegram_assistant_bot.service.database.UserService;
-import ru.selfvsself.model.ChatRequest;
-import ru.selfvsself.model.ChatResponse;
+import org.telegram.telegrambots.meta.api.objects.*;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -28,6 +23,9 @@ public class TelegramService extends TelegramLongPollingBot {
 
     @Autowired
     private KafkaProducerService kafkaProducerService;
+
+    @Autowired
+    private FileRepositoryService fileRepositoryService;
 
     @Override
     public String getBotUsername() {
@@ -44,16 +42,93 @@ public class TelegramService extends TelegramLongPollingBot {
         if (update.hasMessage()) {
             long chatId = update.getMessage().getChatId();
             String userName = Optional.ofNullable(update.getMessage().getFrom())
-                    .map(from -> from.getUserName()).orElse("unknown");
-            log.info("Receive message chatId: {}, userName: {}, text: {}",
-                    chatId, userName, update.getMessage().getText());
-            if (update.getMessage().hasText()) {
-                String messageText = update.getMessage().getText();
-                if (messageText.equals("/start")) {
-                    messageText = "Привет";
+                    .map(User::getUserName).orElse("unknown");
+            if (update.getMessage() != null) {
+                Message message = update.getMessage();
+                log.info("Receive message chatId: {}, userName: {}, message: {}",
+                        chatId, userName, message.toString());
+                if (message.hasVoice()) {
+                    Voice voice = message.getVoice();
+                    processVoiceMessage(chatId, userName, voice.getFileId(), voice.getDuration());
+                } else if (update.getMessage().hasAudio()) {
+                    Audio audio = message.getAudio();
+                    processAudioMessage(chatId, userName, audio.getFileId(), audio.getDuration());
+                } else if (update.getMessage().hasPhoto()) {
+                    var photo = message.getPhoto().stream()
+                            .min((i, y) -> y.getFileSize().compareTo(i.getFileSize()))
+                            .orElse(null);
+                    if (photo != null) {
+                        processPhotoMessage(chatId, userName, photo.getFileId());
+                    } else {
+                        log.error("Photo is null chatId: {}, userName: {}",
+                                chatId, userName);
+                    }
+                } else if (update.getMessage().hasVideo()) {
+                    Video video = message.getVideo();
+                    processVideoMessage(chatId, userName, video.getFileId(), video.getDuration());
+                } else if (message.hasText()) {
+                    processTextMessage(chatId, userName, message.getText());
                 }
-                messageRequestProcessing(chatId, userName, messageText);
             }
+        }
+    }
+
+    private void processTextMessage(long chatId, String userName, String text) {
+        String messageText = text;
+        log.info("Receive text message chatId: {}, userName: {}, text: {}",
+                chatId, userName, messageText);
+        if (messageText.equals("/start")) {
+            messageText = "Привет";
+        }
+        messageRequestProcessing(chatId, userName, messageText);
+    }
+
+    private void processVoiceMessage(long chatId, String userName, String voiceId, Integer duration) {
+        if (duration == null) {
+            log.error("Voice duration is null chatId: {}, userName: {}, voiceId: {}",
+                    chatId, userName, voiceId);
+        } else if (duration > 600) {
+            sendMessage(chatId, "Слишком длинное голосовое сообщение");
+        } else {
+            log.info("Receive voice message chatId: {}, userName: {}, voiceId: {}",
+                    chatId, userName, voiceId);
+            String fileName = fileRepositoryService.downloadFile(chatId, voiceId);
+            log.info("Downloaded file: {}, chatId: {}", fileName, chatId);
+        }
+    }
+
+    private void processAudioMessage(long chatId, String userName, String voiceId, Integer duration) {
+        if (duration == null) {
+            log.error("Audio duration is null chatId: {}, userName: {}, voiceId: {}",
+                    chatId, userName, voiceId);
+        } else if (duration > 600) {
+            sendMessage(chatId, "Слишком длинное аудио сообщение");
+        } else {
+            log.info("Receive audio message chatId: {}, userName: {}, voiceId: {}",
+                    chatId, userName, voiceId);
+            String fileName = fileRepositoryService.downloadFile(chatId, voiceId);
+            log.info("Downloaded file: {}, chatId: {}", fileName, chatId);
+        }
+    }
+
+    private void processPhotoMessage(long chatId, String userName, String voiceId) {
+        log.info("Receive photo message chatId: {}, userName: {}, voiceId: {}",
+                chatId, userName, voiceId);
+        String fileName = fileRepositoryService.downloadFile(chatId, voiceId);
+        log.info("Downloaded file: {}, chatId: {}", fileName, chatId);
+    }
+
+    private void processVideoMessage(long chatId, String userName, String voiceId, Integer duration) {
+        if (duration == null) {
+            log.error("Video duration is null chatId: {}, userName: {}, voiceId: {}",
+                    chatId, userName, voiceId);
+        } else if (duration > 600) {
+            sendMessage(chatId, "Слишком длинное видео");
+        } else {
+            log.info("Receive video message chatId: {}, userName: {}, voiceId: {}",
+                    chatId, userName, voiceId);
+            String fileName = fileRepositoryService.downloadFile(chatId, voiceId);
+            log.info("Downloaded file: {}, chatId: {}", fileName, chatId);
         }
     }
 

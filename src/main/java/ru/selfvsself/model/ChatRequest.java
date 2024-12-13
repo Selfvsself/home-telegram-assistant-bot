@@ -12,7 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChatRequest {
-    private String content;
+    private Content content;
     private UUID requestId;
     private Participant participant;
     private boolean useMessageHistory = true;
