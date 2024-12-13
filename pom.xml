@@ -106,7 +106,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<mainClass>ru.selfvsself.home_telegram_assistant_bot.TelegramAssistantBotApplication</mainClass>
+					<mainClass>ru.selfvsself.home.telegram.assistant.bot.TelegramAssistantBotApplication</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>
